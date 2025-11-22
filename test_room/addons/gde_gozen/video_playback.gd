@@ -334,7 +334,7 @@ func play() -> void:
 		return
 	is_playing = true
 
-	if enable_audio and audio_player.stream.get_length() != 0:
+	if enable_audio and audio_player.stream != null:
 		audio_player.set_stream_paused(false)
 		audio_player.play((current_frame + 1) / _frame_rate)
 		audio_player.set_stream_paused(!is_playing)
@@ -354,7 +354,7 @@ func pause() -> void:
 
 ## Ensures the audio playback is in sync with the video
 func _sync_audio_video() -> void:
-	if enable_audio and audio_player.stream.get_length() != 0:
+	if enable_audio and audio_player.stream != null:
 		var audio_offset: float = audio_player.get_playback_position() + AudioServer.get_time_since_last_mix() - (current_frame + 1) / _frame_rate
 
 		if abs(audio_player.get_playback_position() + AudioServer.get_time_since_last_mix() - (current_frame + 1) / _frame_rate) > AUDIO_OFFSET_THRESHOLD:
@@ -483,12 +483,28 @@ func _open_video() -> void:
 
 
 func _open_audio(stream: int = -1) -> void:
-	var data: PackedByteArray = GoZenAudio.get_audio_data(path, stream)
-	if data.size() != 0:
-		@warning_ignore("UNSAFE_PROPERTY_ACCESS")
-		audio_player.stream.data = data
-	else:
-		printerr("Audio data for video '%s' was 0!" % path)
+	print("loading audio ...")
+	var was_playing := audio_player.playing
+	var last_pos := audio_player.get_playback_position()
+	var ffmpeg_stream : AudioStreamFFmpeg = AudioStreamFFmpeg.new()
+	if ffmpeg_stream.open(path, stream):
+		printerr("Error loading audio!")
+	print("Audio loaded")
+	
+	audio_player.set_deferred("stream", ffmpeg_stream)
+	
+	var after_thread := func(ffmpeg_stream):
+		audio_player.stream == ffmpeg_stream
+		if was_playing:
+			audio_player.play(last_pos)
+		
+	after_thread.call_deferred(ffmpeg_stream)
+	#var data: PackedByteArray = GoZenAudio.get_audio_data(path, stream)
+	#if data.size() != 0:
+	#	@warning_ignore("UNSAFE_PROPERTY_ACCESS")
+	#	audio_player.stream.data = data
+	#else:
+	#	printerr("Audio data for video '%s' was 0!" % path)
 
 
 func _print_stream_info(streams: PackedInt32Array) -> void:
