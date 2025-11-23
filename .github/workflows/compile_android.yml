@@ -1,4 +1,4 @@
-name: 3 | Android
+name: 3 | Compile Android
 on: 
   workflow_call:
     inputs:
@@ -24,7 +24,8 @@ env:
   CMAKE_VERSION: '3.22.1'
   JAVA_VERSION: '17'
 
-run-name: Android build - ${{ inputs.version }}
+run-name: Android build - v${{ inputs.version }}
+
 jobs:
   build_android_arm64:
     runs-on: ubuntu-latest
