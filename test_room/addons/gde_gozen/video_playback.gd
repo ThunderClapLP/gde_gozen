@@ -377,6 +377,7 @@ func pause() -> void:
 
 ## Ensures the audio playback is in sync with the video
 func _sync_audio_video() -> void:
+	return
 	if enable_audio and audio_player.stream != null:
 		var audio_offset: float = audio_player.get_playback_position() + AudioServer.get_time_since_last_mix() - (current_frame + 1) / _frame_rate
 
@@ -525,10 +526,10 @@ func _open_audio(stream: int = -1) -> void:
 		printerr("Error loading audio!")
 	print("Audio loaded")
 	
-	audio_player.set_deferred("stream", ffmpeg_stream)
+	#audio_player.set_deferred("stream", ffmpeg_stream)
 	
-	var after_thread := func(ffmpeg_stream):
-		audio_player.stream == ffmpeg_stream
+	var after_thread := func(stream):
+		audio_player.stream = stream
 		if was_playing:
 			audio_player.play(last_pos)
 		
