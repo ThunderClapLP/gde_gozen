@@ -73,10 +73,10 @@ int AudioStreamFFmpeg::open(const String& path, int stream_index) {
 	} else
 		return _log_err("Invalid stream index");
 
-	// Discard all non-audio streams.
+	// Discard all streams we can't find a decoder for.
 	for (int i = 0; i < av_format_ctx->nb_streams; i++) {
 		AVCodecParameters* av_codec_params = av_format_ctx->streams[i]->codecpar;
-		if (!avcodec_find_decoder(av_codec_params->codec_id) || av_codec_params->codec_type != AVMEDIA_TYPE_AUDIO) {
+		if (!avcodec_find_decoder(av_codec_params->codec_id)) {
 			if (i != stream_index)
 				av_format_ctx->streams[i]->discard = AVDISCARD_ALL;
 		}
